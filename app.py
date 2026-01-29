@@ -101,12 +101,22 @@ def api_upload():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    print("=" * 60)
+    import socket
+    
+    # Get your machine's IP address
+    hostname = socket.gethostname()
+    ip_address = socket.gethostbyname(hostname)
+    
+    print("=" * 70)
     print("🚀 AI Resume Evaluator - Starting Server")
-    print("=" * 60)
-    print("\n✅ Server is running at: http://127.0.0.1:5000/")
-    print("✅ Open your browser and go to: http://127.0.0.1:5000/")
+    print("=" * 70)
+    print(f"\n✅ Local access: http://127.0.0.1:5000/")
+    print(f"✅ Share with friends: http://{ip_address}:5000/")
+    print(f"   Machine name: {hostname}")
     print("\n📝 Supported file formats: PDF, DOCX")
     print("📁 Uploaded files will be saved in: ./uploads/")
-    print("\n" + "=" * 60)
-    app.run(debug=True, port=5000)
+    print("\n⚠️  Make sure Windows Firewall allows Python on port 5000")
+    print("=" * 70)
+    print("\nServer is running... Press CTRL+C to stop\n")
+    
+    app.run(debug=False, host='0.0.0.0', port=5000)
