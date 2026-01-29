@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Evaluator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a0033 50%, #2d0652 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            animation: gradientShift 8s ease infinite;
+            background-size: 200% 200%;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 25px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37),
+                        0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 950px;
+            width: 100%;
+            padding: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            animation: slideUp 0.8s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 45px;
+        }
+
+        h1 {
+            font-size: 3.2em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            animation: fadeInScale 0.8s ease;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.15em;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            animation: fadeIn 1s ease 0.2s both;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        form {
+            animation: fadeIn 1s ease 0.4s both;
+        }
+
+        .upload-section {
+            background: linear-gradient(135deg, #f5f7ff 0%, #f0f2ff 100%);
+            border: 2.5px dashed #667eea;
+            border-radius: 20px;
+            padding: 55px 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .upload-section:hover {
+            background: linear-gradient(135deg, #e8ecff 0%, #e0e5ff 100%);
+            border-color: #764ba2;
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.2);
+        }
+
+        .upload-section:hover::before {
+            left: 100%;
+        }
+
+        .upload-section.dragging-over {
+            background: linear-gradient(135deg, #dce4ff 0%, #d0d9ff 100%);
+            border-color: #764ba2;
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.3);
+        }
+
+        .upload-section input[type="file"] {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 3.5em;
+            margin-bottom: 15px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .upload-text {
+            color: #667eea;
+            font-size: 1.2em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: 0.3px;
+        }
+
+        .upload-hint {
+            color: #888;
+            font-size: 0.95em;
+            font-weight: 500;
+        }
+
+        .file-info {
+            margin-top: 20px;
+            color: #764ba2;
+            font-weight: 600;
+            font-size: 0.95em;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 16px 50px;
+            border-radius: 12px;
+            font-size: 1.05em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-top: 20px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        button span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .error {
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe0e0 100%);
+            color: #c53030;
+            padding: 16px 20px;
+            border-radius: 12px;
+            border-left: 5px solid #f56565;
+            margin: 20px 0;
+            display: none;
+            animation: slideDown 0.4s ease;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(245, 101, 101, 0.15);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 20px;
+        }
+
+        .spinner::before {
+            content: '';
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading p {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 10px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .loading .subtitle {
+            color: #999;
+            font-size: 0.9em;
+        }
+
+        .feedback-section {
+            display: none;
+            margin-top: 50px;
+            padding-top: 50px;
+            border-top: 2px solid #eee;
+            animation: fadeIn 0.8s ease;
+        }
+
+        .feedback-section.show {
+            display: block;
+        }
+
+        .score-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 35px;
+            text-align: center;
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.6s ease;
+        }
+
+        .score-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 300px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        .score-label {
+            font-size: 0.95em;
+            opacity: 0.95;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .score-value {
+            font-size: 4em;
+            font-weight: 900;
+            margin: 15px 0;
+            animation: scaleIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .score-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+
+        .score-fill {
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            animation: fillBar 1.2s ease;
+        }
+
+        @keyframes fillBar {
+            from { width: 0; }
+            to { width: var(--score-percentage); }
+        }
+
+        .summary {
+            background: linear-gradient(135deg, #f5f7ff 0%, #f0f2ff 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 35px;
+            border-left: 5px solid #667eea;
+            color: #333;
+            line-height: 1.8;
+            font-weight: 500;
+            animation: slideUp 0.6s ease 0.1s both;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
+        }
+
+        .feedback-category {
+            margin-bottom: 35px;
+            animation: slideUp 0.6s ease;
+        }
+
+        .category-title {
+            color: #667eea;
+            font-size: 1.35em;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            letter-spacing: 0.5px;
+        }
+
+        .category-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            margin-right: 12px;
+            font-weight: 700;
+            font-size: 1.2em;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .feedback-list {
+            list-style: none;
+            display: grid;
+            gap: 12px;
+        }
+
+        .feedback-item {
+            background: white;
+            padding: 18px;
+            border-radius: 12px;
+            border-left: 5px solid #667eea;
+            display: flex;
+            align-items: flex-start;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            animation: slideIn 0.4s ease;
+        }
+
+        .feedback-item:hover {
+            transform: translateX(8px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
+            border-left-color: #764ba2;
+        }
+
+        .feedback-item::before {
+            content: '✓';
+            color: #667eea;
+            font-weight: 900;
+            margin-right: 15px;
+            font-size: 1.3em;
+            flex-shrink: 0;
+        }
+
+        .feedback-item span {
+            color: #333;
+            line-height: 1.6;
+            font-weight: 500;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 40px;
+        }
+
+        .secondary-btn {
+            background: transparent;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 12px 30px;
+            border-radius: 12px;
+            font-size: 0.95em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .secondary-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px;
+            }
+
+            h1 {
+                font-size: 2.2em;
+            }
+
+            .upload-section {
+                padding: 35px 25px;
+            }
+
+            .score-value {
+                font-size: 2.5em;
+            }
+
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .upload-icon {
+                font-size: 2.5em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+                border-radius: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            button {
+                padding: 14px 25px;
+                font-size: 0.9em;
+            }
+
+            .category-title {
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI Resume Evaluator</h1>
+            <p class="subtitle">Get intelligent AI-powered feedback on your resume</p>
+        </header>
+
+        <form id="uploadForm">
+            <div class="upload-section" id="uploadArea">
+                <input type="file" id="resumeFile" name="resume" accept=".pdf,.docx" required>
+                <div class="upload-icon">📄</div>
+                <div class="upload-text">Click to upload or drag your resume</div>
+                <div class="upload-hint">PDF or DOCX • Max 10MB</div>
+                <div class="file-info" id="fileName"></div>
+            </div>
+
+            <button type="submit" id="submitBtn"><span>Analyze Resume</span></button>
+        </form>
+
+        <div class="error" id="errorMsg"></div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Analyzing with AI</p>
+            <p class="subtitle">This may take a moment...</p>
+        </div>
+
+        <div class="feedback-section" id="feedbackSection">
+            <div id="feedbackContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const resumeFile = document.getElementById('resumeFile');
+        const fileNameDisplay = document.getElementById('fileName');
+        const submitBtn = document.getElementById('submitBtn');
+        const uploadForm = document.getElementById('uploadForm');
+        const loading = document.getElementById('loading');
+        const errorMsg = document.getElementById('errorMsg');
+        const feedbackSection = document.getElementById('feedbackSection');
+        const feedbackContent = document.getElementById('feedbackContent');
+
+        // Drag and drop functionality
+        uploadArea.addEventListener('click', () => resumeFile.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragging-over');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragging-over');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragging-over');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                resumeFile.files = files;
+                updateFileName();
+            }
+        });
+
+        resumeFile.addEventListener('change', updateFileName);
+
+        function updateFileName() {
+            if (resumeFile.files.length > 0) {
+                const fileName = resumeFile.files[0].name;
+                const fileSize = (resumeFile.files[0].size / 1024 / 1024).toFixed(2);
+                fileNameDisplay.textContent = `✓ ${fileName} (${fileSize} MB)`;
+            }
+        }
+
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!resumeFile.files[0]) {
+                showError('Please select a resume file');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('resume', resumeFile.files[0]);
+
+            try {
+                errorMsg.classList.remove('show');
+                loading.style.display = 'block';
+                feedbackSection.classList.remove('show');
+                submitBtn.disabled = true;
+
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                loading.style.display = 'none';
+                submitBtn.disabled = false;
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Error analyzing resume');
+                }
+
+                const data = await response.json();
+                displayFeedback(data.feedback);
+
+            } catch (error) {
+                loading.style.display = 'none';
+                submitBtn.disabled = false;
+                showError(error.message || 'Error analyzing resume');
+            }
+        });
+
+        function displayFeedback(feedback) {
+            let feedbackHTML = '';
+            
+            // Overall Score Card
+            if (feedback.overall_score !== undefined) {
+                const scorePercentage = (feedback.overall_score / 10) * 100;
+                feedbackHTML += `
+                    <div class="score-card">
+                        <div class="score-label">OVERALL RESUME SCORE</div>
+                        <div class="score-value">${feedback.overall_score}/10</div>
+                        <div class="score-bar">
+                            <div class="score-fill" style="--score-percentage: ${scorePercentage}%"></div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Summary
+            if (feedback.summary) {
+                feedbackHTML += `
+                    <div class="summary">${feedback.summary}</div>
+                `;
+            }
+            
+            // Strengths
+            if (feedback.strengths && feedback.strengths.length > 0) {
+                feedbackHTML += `
+                    <div class="feedback-category">
+                        <div class="category-title">
+                            <span class="category-icon">💪</span>
+                            Strengths
+                        </div>
+                        <ul class="feedback-list">
+                `;
+                feedback.strengths.forEach((item, idx) => {
+                    feedbackHTML += `<li class="feedback-item" style="animation-delay: ${idx * 0.1}s"><span>${item}</span></li>`;
+                });
+                feedbackHTML += `</ul></div>`;
+            }
+            
+            // Weaknesses
+            if (feedback.weaknesses && feedback.weaknesses.length > 0) {
+                feedbackHTML += `
+                    <div class="feedback-category">
+                        <div class="category-title">
+                            <span class="category-icon">🎯</span>
+                            Areas to Improve
+                        </div>
+                        <ul class="feedback-list">
+                `;
+                feedback.weaknesses.forEach((item, idx) => {
+                    feedbackHTML += `<li class="feedback-item" style="animation-delay: ${idx * 0.1}s"><span>${item}</span></li>`;
+                });
+                feedbackHTML += `</ul></div>`;
+            }
+            
+            // Improvement Suggestions
+            if (feedback.improvement_suggestions && feedback.improvement_suggestions.length > 0) {
+                feedbackHTML += `
+                    <div class="feedback-category">
+                        <div class="category-title">
+                            <span class="category-icon">💡</span>
+                            Suggestions
+                        </div>
+                        <ul class="feedback-list">
+                `;
+                feedback.improvement_suggestions.forEach((item, idx) => {
+                    feedbackHTML += `<li class="feedback-item" style="animation-delay: ${idx * 0.1}s"><span>${item}</span></li>`;
+                });
+                feedbackHTML += `</ul></div>`;
+            }
+            
+            feedbackHTML += `
+                <div class="action-buttons">
+                    <button class="secondary-btn" onclick="resetForm()">Analyze Another</button>
+                    <button class="secondary-btn" onclick="printResults()">Download Results</button>
+                </div>
+            `;
+            
+            document.getElementById('feedbackContent').innerHTML = feedbackHTML;
+            document.getElementById('feedbackSection').classList.add('show');
+            document.getElementById('submitBtn').textContent = 'Analyze Another Resume';
+        }
+
+        function resetForm() {
+            uploadForm.reset();
+            feedbackSection.classList.remove('show');
+            fileNameDisplay.textContent = '';
+            submitBtn.textContent = 'Analyze Resume';
+            submitBtn.disabled = false;
+        }
+
+        function showError(message) {
+            errorMsg.textContent = '⚠ ' + message;
+            errorMsg.classList.add('show');
+            setTimeout(() => {
+                errorMsg.classList.remove('show');
+            }, 6000);
+        }
+    </script>
+
+
+</body>
+</html>
